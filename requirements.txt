@@ -4,6 +4,4 @@ pandas
 pillow
 openpyxl
 requests
-email
-imaplib2
 pickle-mixin
