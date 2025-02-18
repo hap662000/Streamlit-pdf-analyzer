@@ -55,7 +55,7 @@ if 'selected_email' not in st.session_state:
     st.session_state.selected_email = None  # Track the selected email for analysis
 
 # Define the API endpoint
-TESTING_CONNECT_API = 'http://localhost:5002/api/projects'
+TESTING_CONNECT_API = 'https://pdf-analyzer-162012088916.us-central1.run.app//api/projects'
 
 
 def hex_to_rgb(hex_color):
