@@ -48,11 +48,20 @@ import os
 import tempfile
 from urllib.parse import urlparse, parse_qs
 
-# Add session state initialization for the new feature
+
+# Add session state initialization at the beginning of the script
 if 'page' not in st.session_state:
     st.session_state.page = 'dashboard'  # Default page is the dashboard
 if 'selected_email' not in st.session_state:
     st.session_state.selected_email = None  # Track the selected email for analysis
+if 'selected_project' not in st.session_state:  # Add this initialization
+    st.session_state.selected_project = None
+
+# # Add session state initialization for the new feature
+# if 'page' not in st.session_state:
+#     st.session_state.page = 'dashboard'  # Default page is the dashboard
+# if 'selected_email' not in st.session_state:
+#     st.session_state.selected_email = None  # Track the selected email for analysis
 
 # Define the API endpoint
 TESTING_CONNECT_API = 'https://pdf-analyzer-162012088916.us-central1.run.app//api/projects'
@@ -375,13 +384,6 @@ def analyze_project_document(project, analyzer):
         logging.error(f"Error details: {str(e)}", exc_info=True)
 
 
-# Add session state initialization at the beginning of the script
-if 'page' not in st.session_state:
-    st.session_state.page = 'dashboard'  # Default page is the dashboard
-if 'selected_email' not in st.session_state:
-    st.session_state.selected_email = None  # Track the selected email for analysis
-if 'selected_project' not in st.session_state:  # Add this initialization
-    st.session_state.selected_project = None  # Track the selected project for analysis
 
 def show_testing_connect():
     """
