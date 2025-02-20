@@ -1,10 +1,10 @@
 import streamlit as st
-st.set_page_config(
-    page_title="Email PDF Analyzer",
-    page_icon=":email:",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+# st.set_page_config(
+#     page_title="Email PDF Analyzer",
+#     page_icon=":email:",
+#     layout="wide",
+#     initial_sidebar_state="collapsed"
+# )
 # Add session state initialization at the beginning of the script
 if 'page' not in st.session_state:
     st.session_state.page = 'dashboard'  # Default page is the dashboard
@@ -779,7 +779,7 @@ class EmailPDFAnalyzer:
                     return datetime.now()
 
 
-    def get_emails_with_pdfs(self, search_term: str = None, date_range: tuple = None):
+    def get_emails_with_pdfs(self,date_range: tuple = None):
         # Connect to Gmail and fetch emails
         mail = self.connect_to_gmail()
         mail.select("inbox")
@@ -794,8 +794,8 @@ class EmailPDFAnalyzer:
                 end_date_adj = end_date + timedelta(days=1)
                 search_criteria.append(f'BEFORE "{end_date_adj.strftime("%d-%b-%Y")}"')
         
-        if search_term:
-            search_criteria.append(f'SUBJECT "{search_term}"')
+        # if search_term:
+        #     search_criteria.append(f'SUBJECT "{search_term}"')
             
         if not search_criteria:
             search_criteria = ['ALL']
@@ -1343,11 +1343,11 @@ def show_dashboard():
     # Show keyword management sidebar
     show_keyword_sidebar(analyzer)
     
-    st.write("### Search and Filter")
-    col1, col2, col3 = st.columns([3, 1, 1])
+    # st.write("### Search and Filter")
+    col2, col3 = st.columns([1, 1])
     
-    with col1:
-        search_term = st.text_input("🔎 Search Email Subject", placeholder="Enter search term...")
+    # with col1:
+    #     search_term = st.text_input("🔎 Search Email Subject", placeholder="Enter search term...")
     
     with col2:
         start_date = st.date_input("Start Date", datetime.now() - timedelta(days=7))
@@ -1362,7 +1362,7 @@ def show_dashboard():
     date_range = (start_date, end_date) if start_date and end_date else None
     
     analyzed_state = analyzer.load_analysis_state()
-    emails = analyzer.get_emails_with_pdfs(search_term, date_range)
+    emails = analyzer.get_emails_with_pdfs(date_range)
     
     if not emails:
         st.info("No emails found matching the search criteria.")
