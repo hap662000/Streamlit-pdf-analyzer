@@ -1,7 +1,6 @@
-
 import streamlit as st
 
-# Add this at the very beginning of your script, before any other code
+# Ensure session state initialization happens first, before any imports or functions
 if 'page' not in st.session_state:
     st.session_state.page = 'dashboard'  # Default page is the dashboard
 if 'selected_email' not in st.session_state:
@@ -46,14 +45,6 @@ import os
 import tempfile
 from urllib.parse import urlparse, parse_qs
 
-
-
-
-# # Add session state initialization for the new feature
-# if 'page' not in st.session_state:
-#     st.session_state.page = 'dashboard'  # Default page is the dashboard
-# if 'selected_email' not in st.session_state:
-#     st.session_state.selected_email = None  # Track the selected email for analysis
 
 # Define the API endpoint
 TESTING_CONNECT_API = 'https://pdf-analyzer-162012088916.us-central1.run.app//api/projects'
@@ -393,7 +384,8 @@ def show_testing_connect():
     # Show keyword management sidebar
     show_keyword_sidebar(analyzer)
     
-    if st.session_state.selected_project is None:
+    # Make sure to check if the attribute exists before accessing it
+    if not hasattr(st.session_state, 'selected_project') or st.session_state.selected_project is None:
         show_project_list()
     else:
         show_project_analysis(st.session_state.selected_project)
@@ -1307,13 +1299,7 @@ def filter_emails(df, exclude_domains=None):
 
 
 # Modify the main function to handle page navigation
-def main():
-    # Initialize session state if not already done
-    if 'page' not in st.session_state:
-        st.session_state.page = 'dashboard'
-    if 'selected_email' not in st.session_state:
-        st.session_state.selected_email = None
-    
+def main(): 
     # Navigation in sidebar
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Go to", ["Email PDF Analyzer", "Testing Connect"])
