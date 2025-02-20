@@ -354,7 +354,7 @@ def analyze_project_document(project, analyzer):
                 
                 # Display the highlighted page
                 image = Image.open(io.BytesIO(page_result['image_data']))
-                st.image(image, caption=f"Page {page_result['page_num']}", use_container_width=True)
+                st.image(image, caption=f"Page {page_result['page_num']}", use_column_width=True)
             
             # Generate Excel report
             excel_data = generate_excel([(os.path.basename(file_path), results)])
@@ -1469,7 +1469,7 @@ def analyze_email(email_data, analyzer, analyzed_state):
                                         )
                                     
                                     image = Image.open(io.BytesIO(page_result['image_data']))
-                                    st.image(image, caption=f"Page {page_result['page_num']}", use_container_width=True) 
+                                    st.image(image, caption=f"Page {page_result['page_num']}", use_column_width=True) 
                                                            
                         elif file_path.lower().endswith('.pdf'):
                             # Handle individual PDFs
@@ -1535,7 +1535,7 @@ def analyze_email(email_data, analyzer, analyzed_state):
                                 )
                             
                             image = Image.open(io.BytesIO(page_result['image_data']))
-                            st.image(image, caption=f"Page {page_result['page_num']}", use_container_width=True)
+                            st.image(image, caption=f"Page {page_result['page_num']}", use_column_width=True)
 
             if not all_results:
                 st.error("No PDFs found in the email or Dropbox links.")
