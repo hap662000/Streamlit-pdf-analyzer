@@ -1,14 +1,4 @@
 import streamlit as st
-
-# Ensure session state initialization happens first, before any imports or functions
-if 'page' not in st.session_state:
-    st.session_state.page = 'dashboard'  # Default page is the dashboard
-if 'selected_email' not in st.session_state:
-    st.session_state.selected_email = None  # Track the selected email for analysis
-if 'selected_project' not in st.session_state:
-    st.session_state.selected_project = None  # Track the selected project
-
-
 import imaplib
 import email
 import os
@@ -1303,6 +1293,15 @@ def main():
     # Navigation in sidebar
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Go to", ["Email PDF Analyzer", "Testing Connect"])
+
+    # Ensure session state initialization happens first, before any imports or functions
+    if 'page' not in st.session_state:
+        st.session_state.page = 'dashboard'  # Default page is the dashboard
+    if 'selected_email' not in st.session_state:
+        st.session_state.selected_email = None  # Track the selected email for analysis
+    if 'selected_project' not in st.session_state:
+        st.session_state.selected_project = None  # Track the selected project
+
     
     # Update session state based on navigation
     if page == "Email PDF Analyzer":
