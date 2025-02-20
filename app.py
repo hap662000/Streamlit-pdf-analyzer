@@ -1,10 +1,5 @@
-# import streamlit as st
-# st.set_page_config(
-#     page_title="Email PDF Analyzer",
-#     page_icon=":email:",
-#     layout="wide",
-#     initial_sidebar_state="collapsed"
-# )
+
+import streamlit as st
 # Add session state initialization at the beginning of the script
 if 'page' not in st.session_state:
     st.session_state.page = 'dashboard'  # Default page is the dashboard
@@ -13,7 +8,6 @@ if 'selected_email' not in st.session_state:
 if 'selected_project' not in st.session_state:  # Add this initialization
     st.session_state.selected_project = None
 
-import streamlit as st
 import imaplib
 import email
 import os
@@ -277,21 +271,24 @@ def show_keyword_sidebar(analyzer):
     """Display unified keyword management sidebar"""
     st.sidebar.markdown('<div class="sidebar-header"><h2>🔍 Keyword Management</h2></div>', unsafe_allow_html=True)
     
-    # Display existing keywords
+    # Display existing keywords with delete buttons
     for idx, keyword in enumerate(analyzer.KEYWORDS):
-        keyword_id = sanitize_html_id(keyword)
-        st.sidebar.markdown(
-            f"""
-            <div class="keyword-container">
+        col1, col2 = st.sidebar.columns([4, 1])
+        with col1:
+            st.markdown(
+                f"""
                 <div style="display: flex; align-items: center;">
-                    <div class="keyword-color" style="background-color: {analyzer.KEYWORD_COLORS[keyword]};"></div>
+                    <div class="keyword-color" style="background-color: {analyzer.KEYWORD_COLORS[keyword]}; width: 1rem; height: 1rem; border-radius: 0.25rem; margin-right: 0.75rem;"></div>
                     <span class="keyword-text">{keyword}</span>
                 </div>
-                <button class="keyword-delete-btn" onclick="deleteKeyword('{keyword_id}_{idx}')">🗑️</button>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+                """,
+                unsafe_allow_html=True
+            )
+        with col2:
+            if st.button("🗑️", key=f"delete_{keyword}_{idx}"):
+                analyzer.remove_keyword(keyword)
+                st.success(f"Removed keyword: {keyword}")
+                st.rerun()
     
     # Add new keyword section
     st.sidebar.markdown('<div class="add-keyword-section">', unsafe_allow_html=True)
@@ -767,6 +764,8 @@ class EmailPDFAnalyzer:
             self.KEYWORDS.remove(keyword)
             del self.KEYWORD_COLORS[keyword]
             self.save_keywords()
+            return True
+        return False
 
     def parse_email_date(self, date_str):
         try:
