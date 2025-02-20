@@ -1,12 +1,14 @@
 
 import streamlit as st
-# Add session state initialization at the beginning of the script
+
+# Add this at the very beginning of your script, before any other code
 if 'page' not in st.session_state:
     st.session_state.page = 'dashboard'  # Default page is the dashboard
 if 'selected_email' not in st.session_state:
     st.session_state.selected_email = None  # Track the selected email for analysis
-if 'selected_project' not in st.session_state:  # Add this initialization
-    st.session_state.selected_project = None
+if 'selected_project' not in st.session_state:
+    st.session_state.selected_project = None  # Track the selected project
+
 
 import imaplib
 import email
@@ -382,13 +384,6 @@ def show_testing_connect():
     """
     Display the Testing Connect view with unified styling and keyword management
     """
-    if st.session_state.selected_project is None:
-        show_project_list()
-    else:
-        show_project_analysis(st.session_state.selected_project)
-
-
-def show_project_list():
     st.title("Testing Connect")
     analyzer = EmailPDFAnalyzer()
     
@@ -398,7 +393,15 @@ def show_project_list():
     # Show keyword management sidebar
     show_keyword_sidebar(analyzer)
     
-    
+    if st.session_state.selected_project is None:
+        show_project_list()
+    else:
+        show_project_analysis(st.session_state.selected_project)
+
+def show_project_list():
+    """
+    Display the list of projects
+    """
     # Fetch project details from the API
     projects, error_message = fetch_projects()
     
