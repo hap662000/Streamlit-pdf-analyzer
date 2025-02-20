@@ -1,4 +1,4 @@
-import streamlit as st
+# import streamlit as st
 # st.set_page_config(
 #     page_title="Email PDF Analyzer",
 #     page_icon=":email:",
@@ -10,6 +10,8 @@ if 'page' not in st.session_state:
     st.session_state.page = 'dashboard'  # Default page is the dashboard
 if 'selected_email' not in st.session_state:
     st.session_state.selected_email = None  # Track the selected email for analysis
+if 'selected_project' not in st.session_state:  # Add this initialization
+    st.session_state.selected_project = None
 
 import streamlit as st
 import imaplib
@@ -49,13 +51,7 @@ import tempfile
 from urllib.parse import urlparse, parse_qs
 
 
-# Add session state initialization at the beginning of the script
-if 'page' not in st.session_state:
-    st.session_state.page = 'dashboard'  # Default page is the dashboard
-if 'selected_email' not in st.session_state:
-    st.session_state.selected_email = None  # Track the selected email for analysis
-if 'selected_project' not in st.session_state:  # Add this initialization
-    st.session_state.selected_project = None
+
 
 # # Add session state initialization for the new feature
 # if 'page' not in st.session_state:
