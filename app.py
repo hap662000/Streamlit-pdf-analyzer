@@ -35,10 +35,77 @@ import os
 import tempfile
 from urllib.parse import urlparse, parse_qs
 
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email.mime.text import MIMEText
+from email import encoders
+import logging
+
 
 # Define the API endpoint
 TESTING_CONNECT_API = 'https://pdf-analyzer-162012088916.us-central1.run.app//api/projects'
 
+def send_email_with_attachment(excel_data, email_data):
+    """
+    Send an email with the analysis results attached as an Excel file.
+    
+    Args:
+        excel_data (bytes): The Excel file content as bytes
+        email_data (dict): Dictionary containing email details (subject, sender, etc.)
+    """
+    try:
+        # Email configuration
+        sender_email = "autotake.test@gmail.com"
+        receiver_email = "autotake.test@gmail.com"
+        password = st.secrets["email_password"]  # Use the same password as in the analyzer
+        
+        # Create the email
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = receiver_email
+        msg['Subject'] = f"Analysis Results for: {email_data['subject']}"
+        
+        # Email body
+        body = f"""
+        Analysis results for the project:
+        
+        Subject: {email_data['subject']}
+        Sender: {email_data['sender']}
+        Date: {email_data['date']}
+        
+        Please find the attached Excel file with the detailed analysis.
+        """
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Attach the Excel file
+        attachment = MIMEBase('application', 'octet-stream')
+        attachment.set_payload(excel_data)
+        encoders.encode_base64(attachment)
+        attachment.add_header(
+            'Content-Disposition',
+            f'attachment; filename="analysis_results.xlsx"'
+        )
+        msg.attach(attachment)
+        
+        # Send the email
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()  # Upgrade the connection to secure
+            server.login(sender_email, password)  # Log in to the SMTP server
+            server.sendmail(sender_email, receiver_email, msg.as_string())  # Send the email
+        
+        st.success("Analysis results have been sent via email.")
+        logging.info("Email sent successfully.")
+    
+    except smtplib.SMTPAuthenticationError as e:
+        st.error("Failed to authenticate with the SMTP server. Please check your email password.")
+        logging.error(f"SMTP Authentication Error: {str(e)}")
+    except smtplib.SMTPException as e:
+        st.error("Failed to send email due to an SMTP error.")
+        logging.error(f"SMTP Error: {str(e)}")
+    except Exception as e:
+        st.error(f"An unexpected error occurred while sending the email: {str(e)}")
+        logging.error(f"Unexpected Error: {str(e)}", exc_info=True)
 
 def hex_to_rgb(hex_color):
     """Convert hex color to RGB tuple."""
@@ -284,9 +351,9 @@ def show_keyword_sidebar(analyzer):
             st.rerun()
     st.sidebar.markdown('</div>', unsafe_allow_html=True)
 
-def analyze_project_document(project, analyzer):
+def analyze_project_document(project, analyzer, analyzed_state=None):
     """
-    Analyze the document from a project.
+    Analyze the document from a project and send results via email.
     """
     st.write(f"### Analyzing document for project: {project['name']}")
     
@@ -320,6 +387,10 @@ def analyze_project_document(project, analyzer):
                 st.warning("No keywords found in the document.")
                 return
             
+            # Prepare the filename for display and reporting
+            filename = os.path.basename(file_path)
+            all_results = [(filename, results)]
+            
             # Display results
             for page_result in results:
                 st.write(f"**Page {page_result['page_num']}**")
@@ -339,21 +410,36 @@ def analyze_project_document(project, analyzer):
                 
                 # Display the highlighted page
                 image = Image.open(io.BytesIO(page_result['image_data']))
-                st.image(image, caption=f"Page {page_result['page_num']}", use_container_width=True)
+                st.image(image, caption=f"Page {page_result['page_num']}", width=None)
             
-            # Generate Excel report
-            excel_data = generate_excel([(os.path.basename(file_path), results)])
+            # Update analysis state if provided
+            if analyzed_state is not None:
+                analyzed_state[project['id']] = {
+                    'date': datetime.now().astimezone(),
+                    'subject': project['name'],
+                    'sender': project.get('owner', 'Unknown'),
+                    'timezone': datetime.now().astimezone().tzinfo.tzname(None)
+                }
+                analyzer.save_analysis_state(analyzed_state)
             
-            # Add download button for Excel report
-            st.download_button(
-                label="📥 Download Analysis Report",
-                data=excel_data,
-                file_name=f"analysis_report_{project['id']}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+            # Generate Excel file
+            excel_data = generate_excel(all_results)
+            
+            # Prepare email data
+            email_data = {
+                'subject': f"Project Analysis: {project['name']}",
+                'sender': project.get('owner', 'System'),
+                'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
+            
+            # Send the Excel file via email
+            send_email_with_attachment(excel_data, email_data)
             
             # Clean up the temporary file
             os.remove(file_path)
+            
+            # Display success message after email is sent
+            st.success("Analysis complete!")
                 
     except Exception as e:
         st.error(f"Error analyzing document: {str(e)}")
@@ -404,7 +490,7 @@ def show_project_list():
                     st.markdown(f"""
                         <div style='padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin: 5px 0;'>
                             <h4>{project['name']}</h4>
-                            <p><strong>ID:</strong> {project['id']}</p>
+                            <p><strong>Description:</strong> {project['details']}</p>
                             <p><strong>Document URL:</strong> {project.get('document_url', 'N/A')}</p>
                         </div>
                     """, unsafe_allow_html=True)
@@ -1459,7 +1545,7 @@ def analyze_email(email_data, analyzer, analyzed_state):
                                         )
                                     
                                     image = Image.open(io.BytesIO(page_result['image_data']))
-                                    st.image(image, caption=f"Page {page_result['page_num']}", use_container_width=True) 
+                                    st.image(image, caption=f"Page {page_result['page_num']}", width=None) 
                                                            
                         elif file_path.lower().endswith('.pdf'):
                             # Handle individual PDFs
@@ -1525,7 +1611,7 @@ def analyze_email(email_data, analyzer, analyzed_state):
                                 )
                             
                             image = Image.open(io.BytesIO(page_result['image_data']))
-                            st.image(image, caption=f"Page {page_result['page_num']}", use_container_width=True)
+                            st.image(image, caption=f"Page {page_result['page_num']}", width=None)
 
             if not all_results:
                 st.error("No PDFs found in the email or Dropbox links.")
@@ -1544,13 +1630,8 @@ def analyze_email(email_data, analyzer, analyzed_state):
             # Generate Excel file
             excel_data = generate_excel(all_results)
             
-            # Add download button
-            st.download_button(
-                label="📥 Download Results",
-                data=excel_data,
-                file_name="analysis_results.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+            # Send the Excel file via email
+            send_email_with_attachment(excel_data, email_data)
 
             mail.logout()
 
@@ -1567,6 +1648,16 @@ if __name__ == "__main__":
 
 
 
+
+
+
+
+
+
+
+
+
+    
 
 
 
