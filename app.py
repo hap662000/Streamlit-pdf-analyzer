@@ -44,7 +44,7 @@ import logging
 
 
 # Define the API endpoint
-TESTING_CONNECT_API = 'https://pdf-analyzer-162012088916.us-central1.run.app//api/projects'
+TESTING_CONNECT_API = 'https://testing-connect-162012088916.us-central1.run.app/api/projects'
 
 def send_email_with_attachment(excel_data, email_data):
     """
